@@ -322,7 +322,11 @@
 
                 // Apply filters
                 if (filters.section) {
-                    results = results.filter(item => item.location.section === filters.section);
+                    // Check both primary section and all sections
+                    results = results.filter(item => 
+                        item.location.section === filters.section ||
+                        item.location.all_sections?.some(section => section === filters.section)
+                    );
                     matchReasons.push(`Location: ${filters.section}`);
                 }
 
@@ -392,11 +396,14 @@
             }, [userQuery]);
 
             const sampleQueries = [
-                "What vegetarian food is near section 120?",
+                "What vegetarian food is near section 108?",
                 "What's the fastest food option?", 
                 "Popular food at left field",
-                "Pizza near gate C",
-                "Healthy options close to me"
+                "Chicago style hot dogs",
+                "Pizza near section 103",
+                "Healthy options close to me",
+                "Signature items at Wrigley",
+                "Rotational menu items"
             ];
 
             return (
@@ -424,7 +431,7 @@
                                 type="text"
                                 value={userQuery}
                                 onChange={(e) => setUserQuery(e.target.value)}
-                                placeholder="Try: 'What vegetarian food is near section 120?'"
+                                placeholder="Try: 'What vegetarian food is near section 108?'"
                                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                         </div>
