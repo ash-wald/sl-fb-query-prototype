@@ -151,7 +151,16 @@
                 const intents = [];
                 const filters = {};
 
-                // Location-based intent
+                // Item Name filter
+                const itemNameKeywords = ['chicago', 'pizza', 'burger', 'nachos', 'popcorn', 'hot dog', 'beef', 'ice cream', 'bao'];
+                itemNameKeywords.forEach(keyword => {
+                    if (lowerQuery.includes(keyword)) {
+                        intents.push('item_name_based');
+                        filters.item_name = keyword;
+                    }
+                });
+
+                // Location-based intent (Section)
                 const locationKeywords = ['near', 'section', 'gate', 'field', 'close', 'by'];
                 const sectionMatch = lowerQuery.match(/section\s*(\d+)/);
                 const zoneKeywords = {
@@ -173,11 +182,28 @@
                     });
                 }
 
+                // Stand Name filter
+                const standKeywords = {
+                    'chicago dogs': 'Chicago Dogs',
+                    'pizza stand': 'Pizza Stand',
+                    'third base classics': 'Third Base Classics',
+                    'left field classics': 'Left Field Classics',
+                    'marquee classics': 'Marquee Classics'
+                };
+                Object.keys(standKeywords).forEach(keyword => {
+                    if (lowerQuery.includes(keyword)) {
+                        intents.push('stand_based');
+                        filters.stand_name = standKeywords[keyword];
+                    }
+                });
+
                 // Dietary-based intent
                 const dietaryKeywords = {
                     'vegetarian': 'vegetarian',
                     'vegan': 'vegan', 
-                    'healthy': 'healthy'
+                    'healthy': 'healthy',
+                    'gluten free': 'gluten-free',
+                    'dairy free': 'dairy-free'
                 };
                 
                 Object.keys(dietaryKeywords).forEach(keyword => {
@@ -187,19 +213,93 @@
                     }
                 });
 
+                // Allergen filters
+                const allergenKeywords = ['wheat', 'milk', 'soy', 'nuts', 'eggs'];
+                allergenKeywords.forEach(allergen => {
+                    if (lowerQuery.includes(`no ${allergen}`) || lowerQuery.includes(`without ${allergen}`) || lowerQuery.includes(`${allergen} free`)) {
+                        intents.push('allergen_free');
+                        if (!filters.allergen_free) filters.allergen_free = [];
+                        filters.allergen_free.push(allergen.charAt(0).toUpperCase() + allergen.slice(1));
+                    }
+                });
+
+                // Price-based intent
+                const priceKeywords = {
+                    'cheap': { operator: '<=', value: 10 },
+                    'under 10': { operator: '<=', value: 10 },
+                    'under $10': { operator: '<=', value: 10 },
+                    'expensive': { operator: '>=', value: 15 },
+                    'over 15': { operator: '>=', value: 15 },
+                    'over $15': { operator: '>=', value: 15 },
+                    'budget': { operator: '<=', value: 12 },
+                    'affordable': { operator: '<=', value: 12 }
+                };
+                
+                Object.keys(priceKeywords).forEach(keyword => {
+                    if (lowerQuery.includes(keyword)) {
+                        intents.push('price_based');
+                        filters.price = priceKeywords[keyword];
+                    }
+                });
+
                 // Speed-based intent
-                const speedKeywords = ['fast', 'quick', 'no line', 'short wait', 'fastest'];
-                if (speedKeywords.some(keyword => lowerQuery.includes(keyword))) {
-                    intents.push('speed_based');
-                    filters.speed = 'fast';
-                }
+                const speedKeywords = {
+                    'fast': 'Short',
+                    'quick': 'Short',
+                    'no line': 'Short',
+                    'short wait': 'Short',
+                    'fastest': 'Short',
+                    'slow': 'Long',
+                    'long wait': 'Long'
+                };
+                
+                Object.keys(speedKeywords).forEach(keyword => {
+                    if (lowerQuery.includes(keyword)) {
+                        intents.push('speed_based');
+                        filters.speed = speedKeywords[keyword];
+                    }
+                });
 
                 // Popularity-based intent
-                const popularityKeywords = ['popular', 'best', 'favorite', 'recommended', 'signature'];
-                if (popularityKeywords.some(keyword => lowerQuery.includes(keyword))) {
-                    intents.push('popularity_based');
-                    filters.popularity = 'high';
-                }
+                const popularityKeywords = {
+                    'popular': { operator: '>=', value: 8 },
+                    'best': { operator: '>=', value: 8 },
+                    'favorite': { operator: '>=', value: 7 },
+                    'recommended': { operator: '>=', value: 8 },
+                    'signature': 'signature',
+                    'top rated': { operator: '>=', value: 9 },
+                    'highly rated': { operator: '>=', value: 8 }
+                };
+                
+                Object.keys(popularityKeywords).forEach(keyword => {
+                    if (lowerQuery.includes(keyword)) {
+                        intents.push('popularity_based');
+                        filters.popularity = popularityKeywords[keyword];
+                    }
+                });
+
+                // Custom tags filter
+                const customTagKeywords = {
+                    'local specialty': 'local specialty',
+                    'chicago famous': 'Chicago famous',
+                    'ballpark classic': 'ballpark classic',
+                    'chicago favorite': 'Chicago favorite',
+                    'eco-friendly': 'eco-friendly',
+                    'plant-based': 'plant-based',
+                    'shareable': 'shareable',
+                    'souvenir': 'souvenir',
+                    'kids favorite': 'kids favorite',
+                    'gourmet': 'gourmet',
+                    'limited time': 'limited time',
+                    'chicago tradition': 'Chicago tradition'
+                };
+                
+                Object.keys(customTagKeywords).forEach(keyword => {
+                    if (lowerQuery.includes(keyword)) {
+                        intents.push('custom_tag_based');
+                        filters.custom_tag = customTagKeywords[keyword];
+                    }
+                });
 
                 // Category-based intent
                 const categoryKeywords = {
@@ -208,7 +308,8 @@
                     'burger': 'Burgers',
                     'nachos': 'Nachos',
                     'ice cream': 'Ice Cream',
-                    'popcorn': 'Popcorn'
+                    'popcorn': 'Popcorn',
+                    'italian': 'Italian'
                 };
 
                 Object.keys(categoryKeywords).forEach(keyword => {
@@ -217,6 +318,10 @@
                         filters.category = categoryKeywords[keyword];
                     }
                 });
+
+                // Availability filter - default to "available now"
+                const currentDate = new Date().toISOString().split('T')[0]; // Today's date in YYYY-MM-DD format
+                filters.available_now = currentDate;
 
                 return { intents, filters };
             };
@@ -228,17 +333,33 @@
                 let results = [...data];
                 let matchReasons = [];
 
-                // Apply filters
+                // Item Name filter
+                if (filters.item_name) {
+                    results = results.filter(item => 
+                        item.name.toLowerCase().includes(filters.item_name.toLowerCase())
+                    );
+                    matchReasons.push(`Item name contains: ${filters.item_name}`);
+                }
+
+                // Section filter
                 if (filters.section) {
                     results = results.filter(item => item.location.section === filters.section);
                     matchReasons.push(`Location: Section ${filters.section}`);
                 }
 
+                // Zone filter
                 if (filters.zone) {
                     results = results.filter(item => item.location.zone === filters.zone);
                     matchReasons.push(`Zone: ${filters.zone}`);
                 }
 
+                // Stand Name filter
+                if (filters.stand_name) {
+                    results = results.filter(item => item.location.stand_name === filters.stand_name);
+                    matchReasons.push(`Stand: ${filters.stand_name}`);
+                }
+
+                // Dietary filter
                 if (filters.dietary) {
                     results = results.filter(item => {
                         if (filters.dietary === 'healthy') return item.dietary_info.is_healthy;
@@ -247,20 +368,79 @@
                     matchReasons.push(`Dietary: ${filters.dietary}`);
                 }
 
-                if (filters.speed === 'fast') {
-                    results = results.filter(item => item.speed_metadata.estimated_wait === 'Short');
-                    matchReasons.push('Fast service');
+                // Allergen-free filter
+                if (filters.allergen_free) {
+                    results = results.filter(item => {
+                        return filters.allergen_free.every(allergen => 
+                            !item.dietary_info.allergens.includes(allergen)
+                        );
+                    });
+                    matchReasons.push(`Allergen-free: ${filters.allergen_free.join(', ')}`);
                 }
 
+                // Price filter
+                if (filters.price) {
+                    results = results.filter(item => {
+                        if (filters.price.operator === '<=') {
+                            return item.pricing.average_price <= filters.price.value;
+                        } else if (filters.price.operator === '>=') {
+                            return item.pricing.average_price >= filters.price.value;
+                        }
+                        return true;
+                    });
+                    matchReasons.push(`Price ${filters.price.operator} ${filters.price.value}`);
+                }
+
+                // Speed filter
+                if (filters.speed) {
+                    results = results.filter(item => item.speed_metadata.estimated_wait === filters.speed);
+                    matchReasons.push(`Wait time: ${filters.speed}`);
+                }
+
+                // Popularity filter
+                if (filters.popularity) {
+                    if (typeof filters.popularity === 'object') {
+                        results = results.filter(item => {
+                            if (filters.popularity.operator === '>=') {
+                                return item.popularity.popularity_score >= filters.popularity.value;
+                            } else if (filters.popularity.operator === '<=') {
+                                return item.popularity.popularity_score <= filters.popularity.value;
+                            }
+                            return true;
+                        });
+                        matchReasons.push(`Popularity ${filters.popularity.operator} ${filters.popularity.value}/10`);
+                    } else if (filters.popularity === 'signature') {
+                        results = results.filter(item => item.popularity.is_signature);
+                        matchReasons.push('Signature items only');
+                    }
+                }
+
+                // Custom tag filter
+                if (filters.custom_tag) {
+                    results = results.filter(item => 
+                        item.custom_tags && item.custom_tags.includes(filters.custom_tag)
+                    );
+                    matchReasons.push(`Tag: ${filters.custom_tag}`);
+                }
+
+                // Category filter
                 if (filters.category) {
                     results = results.filter(item => item.category === filters.category);
                     matchReasons.push(`Category: ${filters.category}`);
                 }
 
-                // Ranking logic
-                if (filters.popularity === 'high') {
+                // Availability filter (always applied - available now)
+                if (filters.available_now) {
+                    const currentDate = filters.available_now;
+                    results = results.filter(item => {
+                        return currentDate >= item.start_date && currentDate <= item.end_date;
+                    });
+                    matchReasons.push('Available now');
+                }
+
+                // Default ranking by popularity if no specific popularity filter
+                if (!filters.popularity) {
                     results.sort((a, b) => b.popularity.popularity_score - a.popularity.popularity_score);
-                    matchReasons.push('Popular items');
                 }
 
                 return {
@@ -282,7 +462,12 @@
                 "What's the fastest food option?", 
                 "Popular food at left field",
                 "Chicago style hot dogs",
-                "Signature items at Wrigley"
+                "Signature items at Wrigley",
+                "Cheap food under $10",
+                "No wheat allergen options",
+                "Local specialty items",
+                "Food at Chicago Dogs stand",
+                "Highly rated items over $15"
             ];
 
             return React.createElement('div', { className: "max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen" },
