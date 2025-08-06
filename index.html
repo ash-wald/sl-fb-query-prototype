@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>F&B Query Filter Prototype</title>
+    <title>F&B Data Management System</title>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -13,18 +13,54 @@
 <body>
     <div id="root">
         <div style="padding: 20px; text-align: center;">
-            <p>Loading prototype...</p>
+            <p>Loading data management system...</p>
         </div>
     </div>
 
     <script type="text/babel">
         const { useState, useMemo } = React;
 
-        // Simple SVG icons
+        // SVG Icons
+        const Database = () => (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+            </svg>
+        );
+
+        const Plus = () => (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+        );
+
+        const Edit = () => (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+        );
+
+        const Trash = () => (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="3,6 5,6 21,6"></polyline>
+                <path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2V6"></path>
+            </svg>
+        );
+
         const Search = () => (
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="11" cy="11" r="8"></circle>
                 <path d="21 21l-4.35-4.35"></path>
+            </svg>
+        );
+
+        const Eye = () => (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
             </svg>
         );
 
@@ -42,11 +78,10 @@
             </svg>
         );
 
-        const Utensils = () => (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path>
-                <path d="M7 2v20"></path>
-                <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3z"></path>
+        const Tag = () => (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                <line x1="7" y1="7" x2="7.01" y2="7"></line>
             </svg>
         );
 
@@ -56,615 +91,771 @@
             </svg>
         );
 
-        const Database = () => (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
-                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
-            </svg>
-        );
+        const FoodDataManagement = () => {
+            const [activeView, setActiveView] = useState('table');
+            const [searchTerm, setSearchTerm] = useState('');
+            const [filterSection, setFilterSection] = useState('');
+            const [filterDietary, setFilterDietary] = useState('');
+            const [showAddForm, setShowAddForm] = useState(false);
+            const [editingItem, setEditingItem] = useState(null);
 
-        const ArrowRight = () => (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12,5 19,12 12,19"></polyline>
-            </svg>
-        );
-
-        const FoodQueryPrototype = () => {
-            const [userQuery, setUserQuery] = useState('');
-
-            // Real Cubs concessions data
-            const mockFoodData = [
+            // Enhanced data structure with all your requested fields
+            const [foodData, setFoodData] = useState([
                 {
                     item_id: "cubs_1",
-                    name: "Chicago Style Hot Dog",
-                    description: "",
-                    location: {
-                        section: "108",
-                        stand_name: "Chicago Dogs",
-                        zone: "Left Field"
-                    },
+                    item_name: "Chicago Style Hot Dog",
+                    description: "All-beef hot dog with yellow mustard, chopped onions, bright green relish, tomato wedges, pickle spear, sport peppers and celery salt on a poppy seed bun",
+                    image_url: "https://example.com/chicago-hot-dog.jpg",
+                    website_url: "https://cubs.com/concessions/hot-dogs",
+                    section: "108",
+                    stand_name: "Chicago Dogs",
+                    zone: "Left Field",
+                    allergens: ["Wheat", "Soy"],
+                    dietary_restrictions: [],
+                    price: 12.00,
+                    popularity: 9,
+                    estimated_wait: "Medium",
+                    custom_tags: ["Chicago classic", "signature item", "local specialty"],
+                    start_date: "2024-03-15",
+                    end_date: "2024-10-31",
                     category: "Hot Dogs",
-                    dietary_info: {
-                        allergens: ["Wheat"],
-                        dietary_tags: [],
-                        is_healthy: false
-                    },
-                    speed_metadata: {
-                        estimated_wait: "Medium",
-                        prep_time: "Standard"
-                    },
-                    popularity: {
-                        popularity_score: 9,
-                        is_signature: true,
-                        customer_favorite: true
-                    },
-                    pricing: {
-                        price_range: "$$",
-                        average_price: 12
-                    }
+                    is_active: true,
+                    is_signature: true,
+                    customer_favorite: true
                 },
                 {
                     item_id: "cubs_2",
-                    name: "Home Run Inn Pizza",
-                    description: "",
-                    location: {
-                        section: "103",
-                        stand_name: "Pizza Stand",
-                        zone: "Left Field"
-                    },
+                    item_name: "Home Run Inn Pizza",
+                    description: "Chicago-style tavern thin crust pizza with signature sauce and Wisconsin cheese",
+                    image_url: "https://example.com/pizza.jpg",
+                    website_url: "https://cubs.com/concessions/pizza",
+                    section: "103",
+                    stand_name: "Pizza Stand",
+                    zone: "Left Field",
+                    allergens: ["Milk", "Wheat"],
+                    dietary_restrictions: [],
+                    price: 14.00,
+                    popularity: 8,
+                    estimated_wait: "Medium",
+                    custom_tags: ["Chicago style", "local partnership"],
+                    start_date: "2024-03-15",
+                    end_date: "2024-10-31",
                     category: "Pizza",
-                    dietary_info: {
-                        allergens: ["Milk", "Wheat"],
-                        dietary_tags: [],
-                        is_healthy: false
-                    },
-                    speed_metadata: {
-                        estimated_wait: "Medium",
-                        prep_time: "Standard"
-                    },
-                    popularity: {
-                        popularity_score: 8,
-                        is_signature: true,
-                        customer_favorite: true
-                    },
-                    pricing: {
-                        price_range: "$$",
-                        average_price: 14
-                    }
+                    is_active: true,
+                    is_signature: true,
+                    customer_favorite: true
                 },
                 {
                     item_id: "cubs_3",
-                    name: "Plant Based NotCo Burger",
-                    description: "",
-                    location: {
-                        section: "110",
-                        stand_name: "Third Base Classics",
-                        zone: "Third Base Side"
-                    },
+                    item_name: "Plant Based NotCo Burger",
+                    description: "Plant-based burger patty with lettuce, tomato, and vegan mayo on a brioche bun",
+                    image_url: "https://example.com/plant-burger.jpg",
+                    website_url: "https://cubs.com/concessions/healthy",
+                    section: "110",
+                    stand_name: "Third Base Classics",
+                    zone: "Third Base Side",
+                    allergens: ["Wheat"],
+                    dietary_restrictions: ["vegan", "vegetarian"],
+                    price: 18.00,
+                    popularity: 7,
+                    estimated_wait: "Long",
+                    custom_tags: ["healthy option", "sustainable"],
+                    start_date: "2024-04-01",
+                    end_date: "2024-10-31",
                     category: "Burgers",
-                    dietary_info: {
-                        allergens: ["Wheat"],
-                        dietary_tags: ["vegetarian", "healthy"],
-                        is_healthy: true
-                    },
-                    speed_metadata: {
-                        estimated_wait: "Long",
-                        prep_time: "Slow"
-                    },
-                    popularity: {
-                        popularity_score: 7,
-                        is_signature: false,
-                        customer_favorite: false
-                    },
-                    pricing: {
-                        price_range: "$$$",
-                        average_price: 18
-                    }
+                    is_active: true,
+                    is_signature: false,
+                    customer_favorite: false
                 },
                 {
                     item_id: "cubs_4",
-                    name: "Garrett Mix Popcorn",
-                    description: "",
-                    location: {
-                        section: "119",
-                        stand_name: "Chicago Dogs",
-                        zone: "Right Field"
-                    },
+                    item_name: "Garrett Mix Popcorn",
+                    description: "Chicago's famous mix of cheese and caramel popcorn",
+                    image_url: "https://example.com/garrett-popcorn.jpg",
+                    website_url: "https://cubs.com/concessions/snacks",
+                    section: "119",
+                    stand_name: "Chicago Dogs",
+                    zone: "Right Field",
+                    allergens: ["Milk", "Soy"],
+                    dietary_restrictions: ["vegetarian"],
+                    price: 8.00,
+                    popularity: 9,
+                    estimated_wait: "Short",
+                    custom_tags: ["Chicago classic", "shareable", "local specialty"],
+                    start_date: "2024-03-15",
+                    end_date: "2024-10-31",
                     category: "Popcorn",
-                    dietary_info: {
-                        allergens: ["Milk", "Soy"],
-                        dietary_tags: [],
-                        is_healthy: false
-                    },
-                    speed_metadata: {
-                        estimated_wait: "Short",
-                        prep_time: "Fast"
-                    },
-                    popularity: {
-                        popularity_score: 9,
-                        is_signature: true,
-                        customer_favorite: true
-                    },
-                    pricing: {
-                        price_range: "$",
-                        average_price: 8
-                    }
+                    is_active: true,
+                    is_signature: true,
+                    customer_favorite: true
                 },
                 {
                     item_id: "cubs_5",
-                    name: "Vienna Italian Beef Sandwich",
-                    description: "",
-                    location: {
-                        section: "110",
-                        stand_name: "Third Base Classics",
-                        zone: "Third Base Side"
-                    },
+                    item_name: "Vienna Italian Beef Sandwich",
+                    description: "Thinly sliced seasoned beef on Italian bread, served wet or dry with giardiniera",
+                    image_url: "https://example.com/italian-beef.jpg",
+                    website_url: "https://cubs.com/concessions/sandwiches",
+                    section: "110",
+                    stand_name: "Third Base Classics",
+                    zone: "Third Base Side",
+                    allergens: ["Wheat", "Soy"],
+                    dietary_restrictions: [],
+                    price: 16.00,
+                    popularity: 8,
+                    estimated_wait: "Long",
+                    custom_tags: ["Chicago classic", "local specialty"],
+                    start_date: "2024-03-15",
+                    end_date: "2024-10-31",
                     category: "Italian",
-                    dietary_info: {
-                        allergens: ["Soy"],
-                        dietary_tags: [],
-                        is_healthy: false
-                    },
-                    speed_metadata: {
-                        estimated_wait: "Long",
-                        prep_time: "Slow"
-                    },
-                    popularity: {
-                        popularity_score: 8,
-                        is_signature: true,
-                        customer_favorite: true
-                    },
-                    pricing: {
-                        price_range: "$$$",
-                        average_price: 16
-                    }
-                },
-                {
-                    item_id: "cubs_6",
-                    name: "Nachos",
-                    description: "",
-                    location: {
-                        section: "105",
-                        stand_name: "Left Field Classics",
-                        zone: "Left Field"
-                    },
-                    category: "Nachos",
-                    dietary_info: {
-                        allergens: ["Milk"],
-                        dietary_tags: ["vegetarian"],
-                        is_healthy: false
-                    },
-                    speed_metadata: {
-                        estimated_wait: "Short",
-                        prep_time: "Fast"
-                    },
-                    popularity: {
-                        popularity_score: 7,
-                        is_signature: false,
-                        customer_favorite: true
-                    },
-                    pricing: {
-                        price_range: "$$",
-                        average_price: 10
-                    }
-                },
-                {
-                    item_id: "cubs_7",
-                    name: "Soft Serve Ice Cream Helmet",
-                    description: "",
-                    location: {
-                        section: "105",
-                        stand_name: "Left Field Classics",
-                        zone: "Left Field"
-                    },
-                    category: "Ice Cream",
-                    dietary_info: {
-                        allergens: ["Milk"],
-                        dietary_tags: [],
-                        is_healthy: false
-                    },
-                    speed_metadata: {
-                        estimated_wait: "Short",
-                        prep_time: "Fast"
-                    },
-                    popularity: {
-                        popularity_score: 6,
-                        is_signature: false,
-                        customer_favorite: false
-                    },
-                    pricing: {
-                        price_range: "$$",
-                        average_price: 12
-                    }
-                },
-                {
-                    item_id: "cubs_8",
-                    name: "Pork Bao Bun",
-                    description: "",
-                    location: {
-                        section: "117",
-                        stand_name: "Marquee Classics",
-                        zone: "Main Concourse"
-                    },
-                    category: "Signature Selections",
-                    dietary_info: {
-                        allergens: ["Wheat"],
-                        dietary_tags: [],
-                        is_healthy: false
-                    },
-                    speed_metadata: {
-                        estimated_wait: "Medium",
-                        prep_time: "Standard"
-                    },
-                    popularity: {
-                        popularity_score: 9,
-                        is_signature: true,
-                        customer_favorite: false
-                    },
-                    pricing: {
-                        price_range: "$$$",
-                        average_price: 15
-                    }
+                    is_active: true,
+                    is_signature: true,
+                    customer_favorite: true
                 }
-            ];
+            ]);
 
-            // Intent classification logic
-            const classifyIntent = (query) => {
-                const lowerQuery = query.toLowerCase();
-                const intents = [];
-                const filters = {};
-
-                // Location-based intent
-                const locationKeywords = ['near', 'section', 'gate', 'field', 'close', 'by'];
-                const sectionMatch = lowerQuery.match(/section\s*(\d+)/);
-                const zoneKeywords = {
-                    'left field': 'Left Field',
-                    'right field': 'Right Field', 
-                    'first base': 'First Base Side',
-                    'third base': 'Third Base Side'
-                };
-
-                if (locationKeywords.some(keyword => lowerQuery.includes(keyword)) || sectionMatch) {
-                    intents.push('location_based');
-                    if (sectionMatch) {
-                        filters.section = sectionMatch[1];
-                    }
-                    Object.keys(zoneKeywords).forEach(keyword => {
-                        if (lowerQuery.includes(keyword)) {
-                            filters.zone = zoneKeywords[keyword];
-                        }
-                    });
-                }
-
-                // Dietary-based intent
-                const dietaryKeywords = {
-                    'vegetarian': 'vegetarian',
-                    'vegan': 'vegan', 
-                    'healthy': 'healthy'
-                };
-                
-                Object.keys(dietaryKeywords).forEach(keyword => {
-                    if (lowerQuery.includes(keyword)) {
-                        intents.push('dietary_based');
-                        filters.dietary = dietaryKeywords[keyword];
-                    }
+            // Filter data based on search and filters
+            const filteredData = useMemo(() => {
+                return foodData.filter(item => {
+                    const matchesSearch = item.item_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                        item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                        item.stand_name.toLowerCase().includes(searchTerm.toLowerCase());
+                    
+                    const matchesSection = !filterSection || item.section === filterSection;
+                    
+                    const matchesDietary = !filterDietary || 
+                                         item.dietary_restrictions.includes(filterDietary) ||
+                                         (filterDietary === 'vegetarian' && item.dietary_restrictions.includes('vegetarian')) ||
+                                         (filterDietary === 'vegan' && item.dietary_restrictions.includes('vegan'));
+                    
+                    return matchesSearch && matchesSection && matchesDietary;
                 });
+            }, [foodData, searchTerm, filterSection, filterDietary]);
 
-                // Speed-based intent
-                const speedKeywords = ['fast', 'quick', 'no line', 'short wait', 'fastest'];
-                if (speedKeywords.some(keyword => lowerQuery.includes(keyword))) {
-                    intents.push('speed_based');
-                    filters.speed = 'fast';
-                }
+            // Get unique sections for filter dropdown
+            const uniqueSections = [...new Set(foodData.map(item => item.section))].sort();
 
-                // Popularity-based intent
-                const popularityKeywords = ['popular', 'best', 'favorite', 'recommended', 'signature'];
-                if (popularityKeywords.some(keyword => lowerQuery.includes(keyword))) {
-                    intents.push('popularity_based');
-                    filters.popularity = 'high';
-                }
-
-                // Category-based intent
-                const categoryKeywords = {
-                    'pizza': 'Pizza',
-                    'hot dog': 'Hot Dogs',
-                    'burger': 'Burgers',
-                    'nachos': 'Nachos',
-                    'ice cream': 'Ice Cream',
-                    'popcorn': 'Popcorn'
-                };
-
-                Object.keys(categoryKeywords).forEach(keyword => {
-                    if (lowerQuery.includes(keyword)) {
-                        intents.push('category_based');
-                        filters.category = categoryKeywords[keyword];
-                    }
-                });
-
-                return { intents, filters };
+            const handleDelete = (itemId) => {
+                setFoodData(prev => prev.filter(item => item.item_id !== itemId));
             };
 
-            // Filter and rank results
-            const processQuery = (query, data) => {
-                const { intents, filters } = classifyIntent(query);
-                
-                let results = [...data];
-                let matchReasons = [];
-
-                // Apply filters
-                if (filters.section) {
-                    results = results.filter(item => item.location.section === filters.section);
-                    matchReasons.push(`Location: Section ${filters.section}`);
-                }
-
-                if (filters.zone) {
-                    results = results.filter(item => item.location.zone === filters.zone);
-                    matchReasons.push(`Zone: ${filters.zone}`);
-                }
-
-                if (filters.dietary) {
-                    results = results.filter(item => {
-                        if (filters.dietary === 'healthy') return item.dietary_info.is_healthy;
-                        return item.dietary_info.dietary_tags.includes(filters.dietary);
-                    });
-                    matchReasons.push(`Dietary: ${filters.dietary}`);
-                }
-
-                if (filters.speed === 'fast') {
-                    results = results.filter(item => item.speed_metadata.estimated_wait === 'Short');
-                    matchReasons.push('Fast service');
-                }
-
-                if (filters.category) {
-                    results = results.filter(item => item.category === filters.category);
-                    matchReasons.push(`Category: ${filters.category}`);
-                }
-
-                // Ranking logic
-                if (filters.popularity === 'high') {
-                    results.sort((a, b) => b.popularity.popularity_score - a.popularity.popularity_score);
-                    matchReasons.push('Popular items');
-                }
-
-                // Add match reasons to each result
-                results = results.map(item => ({
-                    ...item,
-                    match_reasons: matchReasons,
-                    relevance_score: item.popularity.popularity_score + (item.popularity.is_signature ? 2 : 0)
-                }));
-
-                return {
-                    intents,
-                    filters,
-                    results: results.slice(0, 5),
-                    total_results: results.length,
-                    match_reasons: matchReasons
-                };
+            const handleEdit = (item) => {
+                setEditingItem(item);
+                setShowAddForm(true);
             };
 
-            const queryResults = useMemo(() => {
-                if (!userQuery.trim()) return null;
-                return processQuery(userQuery, mockFoodData);
-            }, [userQuery]);
+            const handleSave = (formData) => {
+                if (editingItem) {
+                    // Update existing item
+                    setFoodData(prev => prev.map(item => 
+                        item.item_id === editingItem.item_id ? { ...formData, item_id: editingItem.item_id } : item
+                    ));
+                } else {
+                    // Add new item
+                    const newItem = {
+                        ...formData,
+                        item_id: `item_${Date.now()}`,
+                        is_active: true
+                    };
+                    setFoodData(prev => [...prev, newItem]);
+                }
+                setShowAddForm(false);
+                setEditingItem(null);
+            };
 
-            const sampleQueries = [
-                "What vegetarian food is near section 108?",
-                "What's the fastest food option?", 
-                "Popular food at left field",
-                "Chicago style hot dogs",
-                "Signature items at Wrigley"
-            ];
+            // Form component for adding/editing items
+            const ItemForm = ({ item, onSave, onCancel }) => {
+                const [formData, setFormData] = useState(item || {
+                    item_name: '',
+                    description: '',
+                    image_url: '',
+                    website_url: '',
+                    section: '',
+                    stand_name: '',
+                    zone: '',
+                    allergens: [],
+                    dietary_restrictions: [],
+                    price: 0,
+                    popularity: 5,
+                    estimated_wait: 'Medium',
+                    custom_tags: [],
+                    start_date: '',
+                    end_date: '',
+                    category: '',
+                    is_signature: false,
+                    customer_favorite: false
+                });
+
+                const handleSubmit = (e) => {
+                    e.preventDefault();
+                    onSave(formData);
+                };
+
+                const handleArrayInput = (field, value) => {
+                    const array = value.split(',').map(item => item.trim()).filter(item => item);
+                    setFormData(prev => ({ ...prev, [field]: array }));
+                };
+
+                return (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                        <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                            <h3 className="text-lg font-semibold mb-4">
+                                {item ? 'Edit Item' : 'Add New Item'}
+                            </h3>
+                            
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Item Name *</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={formData.item_name}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, item_name: e.target.value }))}
+                                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Category *</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={formData.category}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Description</label>
+                                    <textarea
+                                        value={formData.description}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        rows={3}
+                                    />
+                                </div>
+
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Image URL</label>
+                                        <input
+                                            type="url"
+                                            value={formData.image_url}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
+                                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Website URL</label>
+                                        <input
+                                            type="url"
+                                            value={formData.website_url}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, website_url: e.target.value }))}
+                                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Section *</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={formData.section}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, section: e.target.value }))}
+                                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Stand Name *</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={formData.stand_name}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, stand_name: e.target.value }))}
+                                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Zone</label>
+                                        <select
+                                            value={formData.zone}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, zone: e.target.value }))}
+                                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        >
+                                            <option value="">Select Zone</option>
+                                            <option value="Left Field">Left Field</option>
+                                            <option value="Right Field">Right Field</option>
+                                            <option value="First Base Side">First Base Side</option>
+                                            <option value="Third Base Side">Third Base Side</option>
+                                            <option value="Main Concourse">Main Concourse</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Allergens (comma-separated)</label>
+                                        <input
+                                            type="text"
+                                            value={formData.allergens?.join(', ') || ''}
+                                            onChange={(e) => handleArrayInput('allergens', e.target.value)}
+                                            placeholder="Wheat, Milk, Soy"
+                                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Dietary Restrictions (comma-separated)</label>
+                                        <input
+                                            type="text"
+                                            value={formData.dietary_restrictions?.join(', ') || ''}
+                                            onChange={(e) => handleArrayInput('dietary_restrictions', e.target.value)}
+                                            placeholder="vegetarian, vegan, gluten-free"
+                                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Price *</label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            required
+                                            value={formData.price}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) }))}
+                                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Popularity (1-10)</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="10"
+                                            value={formData.popularity}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, popularity: parseInt(e.target.value) }))}
+                                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Estimated Wait</label>
+                                        <select
+                                            value={formData.estimated_wait}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, estimated_wait: e.target.value }))}
+                                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        >
+                                            <option value="Short">Short</option>
+                                            <option value="Medium">Medium</option>
+                                            <option value="Long">Long</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Custom Tags (comma-separated)</label>
+                                    <input
+                                        type="text"
+                                        value={formData.custom_tags?.join(', ') || ''}
+                                        onChange={(e) => handleArrayInput('custom_tags', e.target.value)}
+                                        placeholder="local specialty, shareable, Chicago classic"
+                                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    />
+                                </div>
+
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Start Date</label>
+                                        <input
+                                            type="date"
+                                            value={formData.start_date}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
+                                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">End Date</label>
+                                        <input
+                                            type="date"
+                                            value={formData.end_date}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
+                                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-4">
+                                    <label className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.is_signature}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, is_signature: e.target.checked }))}
+                                            className="mr-2"
+                                        />
+                                        Signature Item
+                                    </label>
+                                    
+                                    <label className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.customer_favorite}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, customer_favorite: e.target.checked }))}
+                                            className="mr-2"
+                                        />
+                                        Customer Favorite
+                                    </label>
+                                </div>
+
+                                <div className="flex gap-2 pt-4">
+                                    <button
+                                        type="submit"
+                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                                    >
+                                        {item ? 'Update' : 'Add'} Item
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={onCancel}
+                                        className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                );
+            };
 
             return (
-                <div className="max-w-6xl mx-auto p-6 bg-gray-50 min-h-screen">
+                <div className="max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
+                    {/* Header */}
                     <div className="mb-8">
                         <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
                             <Database />
-                            F&B Query Filter Prototype
+                            F&B Data Management System
                         </h1>
                         <p className="text-gray-600">
-                            Demonstrate how user queries translate to search filters and results (using real Cubs data)
+                            Manage food and beverage data for venue concessions
                         </p>
                     </div>
 
-                    {/* Query Input */}
-                    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            User Query
-                        </label>
-                        <div className="relative">
-                            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                                <Search />
+                    {/* Navigation */}
+                    <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+                        <div className="flex flex-wrap items-center justify-between gap-4">
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setActiveView('table')}
+                                    className={`px-4 py-2 rounded-lg ${activeView === 'table' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                                >
+                                    Data Table
+                                </button>
+                                <button
+                                    onClick={() => setActiveView('query')}
+                                    className={`px-4 py-2 rounded-lg ${activeView === 'query' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                                >
+                                    Query Preview
+                                </button>
                             </div>
-                            <input
-                                type="text"
-                                value={userQuery}
-                                onChange={(e) => setUserQuery(e.target.value)}
-                                placeholder="Try: 'What vegetarian food is near section 108?'"
-                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
-                        </div>
-                        
-                        {/* Sample Queries */}
-                        <div className="mt-4">
-                            <p className="text-sm text-gray-600 mb-2">Try these sample queries:</p>
-                            <div className="flex flex-wrap gap-2">
-                                {sampleQueries.map((query, index) => (
-                                    <button
-                                        key={index}
-                                        onClick={() => setUserQuery(query)}
-                                        className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hover:bg-blue-200 transition-colors"
-                                    >
-                                        {query}
-                                    </button>
-                                ))}
-                            </div>
+                            
+                            <button
+                                onClick={() => setShowAddForm(true)}
+                                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                            >
+                                <Plus />
+                                Add New Item
+                            </button>
                         </div>
                     </div>
 
-                    {queryResults && (
+                    {activeView === 'table' && (
                         <>
-                            {/* Intent Analysis */}
-                            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                                    <Filter />
-                                    Intent Analysis & Filters
-                                </h2>
-                                
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    <div>
-                                        <h3 className="font-medium text-gray-900 mb-2">Detected Intents:</h3>
-                                        <div className="space-y-1">
-                                            {queryResults.intents.map((intent, index) => (
-                                                <span
-                                                    key={index}
-                                                    className="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm mr-2 mb-1"
-                                                >
-                                                    {intent.replace('_', ' ')}
-                                                </span>
-                                            ))}
+                            {/* Filters */}
+                            <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+                                <div className="flex flex-wrap gap-4 items-center">
+                                    <div className="flex-1 min-w-64">
+                                        <div className="relative">
+                                            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                                <Search />
+                                            </div>
+                                            <input
+                                                type="text"
+                                                placeholder="Search items..."
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                            />
                                         </div>
                                     </div>
-
-                                    <div>
-                                        <h3 className="font-medium text-gray-900 mb-2">Applied Filters:</h3>
-                                        <div className="space-y-1">
-                                            {Object.entries(queryResults.filters).map(([key, value]) => (
-                                                <div key={key} className="text-sm">
-                                                    <span className="font-medium text-gray-700">{key}:</span>
-                                                    <span className="ml-1 px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
-                                                        {value}
-                                                    </span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* SQL-like Query Visualization */}
-                                <div className="mt-4 p-4 bg-gray-100 rounded-lg">
-                                    <h3 className="font-medium text-gray-900 mb-2">Equivalent SQL Query:</h3>
-                                    <code className="text-sm text-gray-800 block">
-                                        SELECT * FROM food_items<br/>
-                                        WHERE 1=1
-                                        {Object.entries(queryResults.filters).map(([key, value]) => (
-                                            <span key={key}>
-                                                <br/>&nbsp;&nbsp;AND {key} = '{value}'
-                                            </span>
+                                    
+                                    <select
+                                        value={filterSection}
+                                        onChange={(e) => setFilterSection(e.target.value)}
+                                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <option value="">All Sections</option>
+                                        {uniqueSections.map(section => (
+                                            <option key={section} value={section}>Section {section}</option>
                                         ))}
-                                        <br/>ORDER BY popularity_score DESC
-                                        <br/>LIMIT 5;
-                                    </code>
+                                    </select>
+                                    
+                                    <select
+                                        value={filterDietary}
+                                        onChange={(e) => setFilterDietary(e.target.value)}
+                                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <option value="">All Dietary</option>
+                                        <option value="vegetarian">Vegetarian</option>
+                                        <option value="vegan">Vegan</option>
+                                    </select>
                                 </div>
                             </div>
 
-                            {/* Results */}
-                            <div className="bg-white rounded-lg shadow-md p-6">
-                                <div className="flex items-center justify-between mb-4">
-                                    <h2 className="text-xl font-semibold flex items-center gap-2">
-                                        <Utensils />
-                                        Query Results ({queryResults.total_results} found)
-                                    </h2>
-                                    <span className="text-sm text-gray-600">
-                                        Showing top {queryResults.results.length} results
-                                    </span>
+                            {/* Data Table */}
+                            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                                <div className="p-4 border-b border-gray-200">
+                                    <h2 className="text-lg font-semibold">Food Items ({filteredData.length})</h2>
                                 </div>
-
-                                <div className="space-y-4">
-                                    {queryResults.results.map((item, index) => (
-                                        <div key={item.item_id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
-                                            <div className="flex items-start justify-between">
-                                                <div className="flex-1">
-                                                    <div className="flex items-center gap-2 mb-2">
-                                                        <h3 className="font-semibold text-lg text-gray-900">{item.name}</h3>
-                                                        {item.popularity.is_signature && (
-                                                            <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
-                                                                Signature
-                                                            </span>
-                                                        )}
-                                                        {item.popularity.customer_favorite && (
-                                                            <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
-                                                                Fan Favorite
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    
-                                                    <div className="grid md:grid-cols-3 gap-4 text-sm mb-3">
-                                                        <div className="flex items-center gap-1">
-                                                            <MapPin />
-                                                            <span className="font-medium">{item.location.stand_name}</span>
-                                                            <span className="text-gray-500">(Section {item.location.section})</span>
+                                
+                                <div className="overflow-x-auto">
+                                    <table className="w-full">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
+                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Popularity</th>
+                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Wait Time</th>
+                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dietary</th>
+                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                            {filteredData.map((item) => (
+                                                <tr key={item.item_id} className="hover:bg-gray-50">
+                                                    <td className="px-4 py-4">
+                                                        <div className="flex items-start space-x-3">
+                                                            <div className="flex-shrink-0 w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
+                                                                {item.image_url ? (
+                                                                    <img 
+                                                                        src={item.image_url} 
+                                                                        alt={item.item_name}
+                                                                        className="w-12 h-12 rounded-lg object-cover"
+                                                                        onError={(e) => {
+                                                                            e.target.style.display = 'none';
+                                                                            e.target.nextSibling.style.display = 'block';
+                                                                        }}
+                                                                    />
+                                                                ) : null}
+                                                                <span className="text-gray-400 text-xs" style={{display: item.image_url ? 'none' : 'block'}}>No Image</span>
+                                                            </div>
+                                                            <div className="min-w-0 flex-1">
+                                                                <div className="flex items-center gap-2">
+                                                                    <p className="text-sm font-medium text-gray-900 truncate">
+                                                                        {item.item_name}
+                                                                    </p>
+                                                                    {item.is_signature && (
+                                                                        <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
+                                                                            Signature
+                                                                        </span>
+                                                                    )}
+                                                                    {item.customer_favorite && (
+                                                                        <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
+                                                                            Fan Fav
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <p className="text-sm text-gray-500 truncate">{item.description}</p>
+                                                                <p className="text-xs text-gray-400">{item.category}</p>
+                                                                {item.custom_tags.length > 0 && (
+                                                                    <div className="flex flex-wrap gap-1 mt-1">
+                                                                        {item.custom_tags.slice(0, 2).map((tag, index) => (
+                                                                            <span key={index} className="px-1 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">
+                                                                                {tag}
+                                                                            </span>
+                                                                        ))}
+                                                                        {item.custom_tags.length > 2 && (
+                                                                            <span className="text-xs text-gray-400">+{item.custom_tags.length - 2}</span>
+                                                                        )}
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </div>
-                                                        
+                                                    </td>
+                                                    <td className="px-4 py-4">
+                                                        <div className="text-sm">
+                                                            <div className="flex items-center gap-1 text-gray-900">
+                                                                <MapPin />
+                                                                <span className="font-medium">{item.stand_name}</span>
+                                                            </div>
+                                                            <div className="text-gray-500">Section {item.section}</div>
+                                                            <div className="text-gray-400 text-xs">{item.zone}</div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-4 py-4">
+                                                        <div className="text-sm font-medium text-gray-900">
+                                                            ${item.price.toFixed(2)}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-4 py-4">
+                                                        <div className="flex items-center">
+                                                            <div className="text-sm font-medium text-gray-900">
+                                                                {item.popularity}/10
+                                                            </div>
+                                                            <div className="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                                                                <div 
+                                                                    className="bg-blue-600 h-2 rounded-full" 
+                                                                    style={{width: `${(item.popularity / 10) * 100}%`}}
+                                                                ></div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-4 py-4">
                                                         <div className="flex items-center gap-1">
                                                             <Clock />
-                                                            <span>Wait: {item.speed_metadata.estimated_wait}</span>
+                                                            <span className={`text-sm font-medium ${
+                                                                item.estimated_wait === 'Short' ? 'text-green-600' :
+                                                                item.estimated_wait === 'Medium' ? 'text-yellow-600' : 'text-red-600'
+                                                            }`}>
+                                                                {item.estimated_wait}
+                                                            </span>
                                                         </div>
-                                                        
-                                                        <div className="flex items-center gap-1">
-                                                            <span className="font-medium">Price: {item.pricing.price_range}</span>
-                                                            <span className="text-gray-500">(~${item.pricing.average_price})</span>
+                                                    </td>
+                                                    <td className="px-4 py-4">
+                                                        <div className="space-y-1">
+                                                            {item.dietary_restrictions.length > 0 && (
+                                                                <div className="flex flex-wrap gap-1">
+                                                                    {item.dietary_restrictions.map((diet, index) => (
+                                                                        <span key={index} className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
+                                                                            {diet}
+                                                                        </span>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                            {item.allergens.length > 0 && (
+                                                                <div className="text-xs text-red-600">
+                                                                    Allergens: {item.allergens.join(', ')}
+                                                                </div>
+                                                            )}
                                                         </div>
-                                                    </div>
-
-                                                    {item.dietary_info.dietary_tags.length > 0 && (
-                                                        <div className="flex flex-wrap gap-1">
-                                                            {item.dietary_info.dietary_tags.map((tag, tagIndex) => (
-                                                                <span
-                                                                    key={tagIndex}
-                                                                    className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs"
+                                                    </td>
+                                                    <td className="px-4 py-4">
+                                                        <div className="space-y-1">
+                                                            <div className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                                                item.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                                            }`}>
+                                                                {item.is_active ? 'Active' : 'Inactive'}
+                                                            </div>
+                                                            {item.start_date && (
+                                                                <div className="text-xs text-gray-500">
+                                                                    {item.start_date} - {item.end_date || 'Ongoing'}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-4 py-4">
+                                                        <div className="flex space-x-2">
+                                                            {item.website_url && (
+                                                                <a
+                                                                    href={item.website_url}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="text-blue-600 hover:text-blue-900"
+                                                                    title="View details"
                                                                 >
-                                                                    {tag}
-                                                                </span>
-                                                            ))}
+                                                                    <Eye />
+                                                                </a>
+                                                            )}
+                                                            <button
+                                                                onClick={() => handleEdit(item)}
+                                                                className="text-gray-600 hover:text-gray-900"
+                                                                title="Edit item"
+                                                            >
+                                                                <Edit />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDelete(item.item_id)}
+                                                                className="text-red-600 hover:text-red-900"
+                                                                title="Delete item"
+                                                            >
+                                                                <Trash />
+                                                            </button>
                                                         </div>
-                                                    )}
-                                                </div>
-                                                
-                                                <div className="ml-4 text-right">
-                                                    <div className="text-sm font-medium text-gray-900">
-                                                        Relevance: {item.relevance_score}/10
-                                                    </div>
-                                                    <div className="text-xs text-gray-500 mt-1">
-                                                        Popularity: {item.popularity.popularity_score}/10
-                                                    </div>
-                                                </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    
+                                    {filteredData.length === 0 && (
+                                        <div className="text-center py-12">
+                                            <div className="text-gray-400 mb-2">
+                                                <Database />
                                             </div>
-
-                                            {/* Match Reasons */}
-                                            {item.match_reasons.length > 0 && (
-                                                <div className="mt-3 pt-3 border-t border-gray-100">
-                                                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                                                        <ArrowRight />
-                                                        <span>Matches: {item.match_reasons.join(', ')}</span>
-                                                    </div>
-                                                </div>
-                                            )}
+                                            <h3 className="text-lg font-medium text-gray-900 mb-2">No items found</h3>
+                                            <p className="text-gray-500">Try adjusting your search filters or add a new item.</p>
                                         </div>
-                                    ))}
+                                    )}
                                 </div>
-
-                                {queryResults.results.length === 0 && (
-                                    <div className="text-center py-8 text-gray-500">
-                                        No results found for your query. Try adjusting your search terms.
-                                    </div>
-                                )}
                             </div>
                         </>
                     )}
 
-                    {!queryResults && (
-                        <div className="bg-white rounded-lg shadow-md p-8 text-center">
-                            <div className="w-12 h-12 text-gray-400 mx-auto mb-4">
-                                <Search />
-                            </div>
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">Ready to Search</h3>
-                            <p className="text-gray-600">
-                                Enter a query above to see how it gets processed into filters and results
+                    {activeView === 'query' && (
+                        <div className="bg-white rounded-lg shadow-md p-6">
+                            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                                <Filter />
+                                Query System Preview
+                            </h2>
+                            <p className="text-gray-600 mb-6">
+                                This shows how your data would appear in the query filtering system. The data table above feeds directly into this interface.
                             </p>
+                            
+                            {/* Embedded Query Interface Preview */}
+                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 bg-gray-50">
+                                <div className="text-center">
+                                    <div className="text-4xl mb-4">🔄</div>
+                                    <h3 className="text-lg font-medium text-gray-900 mb-2">Query Interface Integration</h3>
+                                    <p className="text-gray-600 mb-4">
+                                        The data from your table automatically feeds into the query filtering system you saw in the previous prototype.
+                                    </p>
+                                    <div className="space-y-2 text-sm text-left bg-white p-4 rounded border max-w-md mx-auto">
+                                        <div><strong>Data Flow:</strong></div>
+                                        <div>1. Items managed in data table above</div>
+                                        <div>2. Real-time filtering and search</div>
+                                        <div>3. Intent classification on user queries</div>
+                                        <div>4. Smart ranking and results</div>
+                                    </div>
+                                    <p className="text-sm text-gray-500 mt-4">
+                                        Your {foodData.length} items would be searchable via natural language queries like "vegetarian food near section 108" or "fastest food options".
+                                    </p>
+                                </div>
+                            </div>
                         </div>
+                    )}
+
+                    {/* Add/Edit Form Modal */}
+                    {showAddForm && (
+                        <ItemForm
+                            item={editingItem}
+                            onSave={handleSave}
+                            onCancel={() => {
+                                setShowAddForm(false);
+                                setEditingItem(null);
+                            }}
+                        />
                     )}
                 </div>
             );
@@ -672,10 +863,10 @@
 
         // Mount the component
         try {
-            ReactDOM.render(<FoodQueryPrototype />, document.getElementById('root'));
+            ReactDOM.render(<FoodDataManagement />, document.getElementById('root'));
         } catch (error) {
             console.error('Error rendering component:', error);
-            document.getElementById('root').innerHTML = '<div style="padding: 20px; color: red;">Error loading prototype. Please refresh the page.</div>';
+            document.getElementById('root').innerHTML = '<div style="padding: 20px; color: red;">Error loading data management system. Please refresh the page.</div>';
         }
     </script>
 </body>
