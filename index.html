@@ -20,32 +20,10 @@
     <script type="text/babel">
         const { useState, useMemo } = React;
 
-        // Simple SVG icons
-        const Search = () => React.createElement('svg', { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2" },
-            React.createElement('circle', { cx: "11", cy: "11", r: "8" }),
-            React.createElement('path', { d: "21 21l-4.35-4.35" })
-        );
-
-        const Filter = () => React.createElement('svg', { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2" },
-            React.createElement('polygon', { points: "22,3 2,3 10,12.46 10,19 14,21 14,12.46" })
-        );
-
-        const Database = () => React.createElement('svg', { width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2" },
-            React.createElement('ellipse', { cx: "12", cy: "5", rx: "9", ry: "3" }),
-            React.createElement('path', { d: "M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" }),
-            React.createElement('path', { d: "M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" })
-        );
-
-        const Utensils = () => React.createElement('svg', { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2" },
-            React.createElement('path', { d: "M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" }),
-            React.createElement('path', { d: "M7 2v20" }),
-            React.createElement('path', { d: "M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3z" })
-        );
-
-        const FoodQueryPrototype = () => {
+        const FoodQueryPrototype = function() {
             const [userQuery, setUserQuery] = useState('');
 
-            // Real Cubs concessions data
+            // Sample food data
             const mockFoodData = [
                 {
                     item_id: "cubs_1",
@@ -145,314 +123,87 @@
                 }
             ];
 
-            // Intent classification logic
-            const classifyIntent = (query) => {
-                const lowerQuery = query.toLowerCase();
-                const intents = [];
-                const filters = {};
+            // Process query function
+            const processQuery = function(query, data) {
+                try {
+                    const lowerQuery = query.toLowerCase();
+                    let results = data.slice();
+                    let matchReasons = [];
 
-                // Item Name filter
-                const itemNameKeywords = ['chicago', 'pizza', 'burger', 'nachos', 'popcorn', 'hot dog', 'beef', 'ice cream', 'bao'];
-                itemNameKeywords.forEach(keyword => {
-                    if (lowerQuery.includes(keyword)) {
-                        intents.push('item_name_based');
-                        filters.item_name = keyword;
-                    }
-                });
-
-                // Location-based intent (Section)
-                const locationKeywords = ['near', 'section', 'gate', 'field', 'close', 'by'];
-                const sectionMatch = lowerQuery.match(/section\s*(\d+)/);
-                const zoneKeywords = {
-                    'left field': 'Left Field',
-                    'right field': 'Right Field', 
-                    'first base': 'First Base Side',
-                    'third base': 'Third Base Side'
-                };
-
-                if (locationKeywords.some(keyword => lowerQuery.includes(keyword)) || sectionMatch) {
-                    intents.push('location_based');
-                    if (sectionMatch) {
-                        filters.section = sectionMatch[1];
-                    }
-                    Object.keys(zoneKeywords).forEach(keyword => {
-                        if (lowerQuery.includes(keyword)) {
-                            filters.zone = zoneKeywords[keyword];
-                        }
-                    });
-                }
-
-                // Stand Name filter
-                const standKeywords = {
-                    'chicago dogs': 'Chicago Dogs',
-                    'pizza stand': 'Pizza Stand',
-                    'third base classics': 'Third Base Classics',
-                    'left field classics': 'Left Field Classics',
-                    'marquee classics': 'Marquee Classics'
-                };
-                Object.keys(standKeywords).forEach(keyword => {
-                    if (lowerQuery.includes(keyword)) {
-                        intents.push('stand_based');
-                        filters.stand_name = standKeywords[keyword];
-                    }
-                });
-
-                // Dietary-based intent
-                const dietaryKeywords = {
-                    'vegetarian': 'vegetarian',
-                    'vegan': 'vegan', 
-                    'healthy': 'healthy',
-                    'gluten free': 'gluten-free',
-                    'dairy free': 'dairy-free'
-                };
-                
-                Object.keys(dietaryKeywords).forEach(keyword => {
-                    if (lowerQuery.includes(keyword)) {
-                        intents.push('dietary_based');
-                        filters.dietary = dietaryKeywords[keyword];
-                    }
-                });
-
-                // Allergen filters
-                const allergenKeywords = ['wheat', 'milk', 'soy', 'nuts', 'eggs'];
-                allergenKeywords.forEach(allergen => {
-                    if (lowerQuery.includes(`no ${allergen}`) || lowerQuery.includes(`without ${allergen}`) || lowerQuery.includes(`${allergen} free`)) {
-                        intents.push('allergen_free');
-                        if (!filters.allergen_free) filters.allergen_free = [];
-                        filters.allergen_free.push(allergen.charAt(0).toUpperCase() + allergen.slice(1));
-                    }
-                });
-
-                // Price-based intent
-                const priceKeywords = {
-                    'cheap': { operator: '<=', value: 10 },
-                    'under 10': { operator: '<=', value: 10 },
-                    'under $10': { operator: '<=', value: 10 },
-                    'expensive': { operator: '>=', value: 15 },
-                    'over 15': { operator: '>=', value: 15 },
-                    'over $15': { operator: '>=', value: 15 },
-                    'budget': { operator: '<=', value: 12 },
-                    'affordable': { operator: '<=', value: 12 }
-                };
-                
-                Object.keys(priceKeywords).forEach(keyword => {
-                    if (lowerQuery.includes(keyword)) {
-                        intents.push('price_based');
-                        filters.price = priceKeywords[keyword];
-                    }
-                });
-
-                // Speed-based intent
-                const speedKeywords = {
-                    'fast': 'Short',
-                    'quick': 'Short',
-                    'no line': 'Short',
-                    'short wait': 'Short',
-                    'fastest': 'Short',
-                    'slow': 'Long',
-                    'long wait': 'Long'
-                };
-                
-                Object.keys(speedKeywords).forEach(keyword => {
-                    if (lowerQuery.includes(keyword)) {
-                        intents.push('speed_based');
-                        filters.speed = speedKeywords[keyword];
-                    }
-                });
-
-                // Popularity-based intent
-                const popularityKeywords = {
-                    'popular': { operator: '>=', value: 8 },
-                    'best': { operator: '>=', value: 8 },
-                    'favorite': { operator: '>=', value: 7 },
-                    'recommended': { operator: '>=', value: 8 },
-                    'signature': 'signature',
-                    'top rated': { operator: '>=', value: 9 },
-                    'highly rated': { operator: '>=', value: 8 }
-                };
-                
-                Object.keys(popularityKeywords).forEach(keyword => {
-                    if (lowerQuery.includes(keyword)) {
-                        intents.push('popularity_based');
-                        filters.popularity = popularityKeywords[keyword];
-                    }
-                });
-
-                // Custom tags filter
-                const customTagKeywords = {
-                    'local specialty': 'local specialty',
-                    'chicago famous': 'Chicago famous',
-                    'ballpark classic': 'ballpark classic',
-                    'chicago favorite': 'Chicago favorite',
-                    'eco-friendly': 'eco-friendly',
-                    'plant-based': 'plant-based',
-                    'shareable': 'shareable',
-                    'souvenir': 'souvenir',
-                    'kids favorite': 'kids favorite',
-                    'gourmet': 'gourmet',
-                    'limited time': 'limited time',
-                    'chicago tradition': 'Chicago tradition'
-                };
-                
-                Object.keys(customTagKeywords).forEach(keyword => {
-                    if (lowerQuery.includes(keyword)) {
-                        intents.push('custom_tag_based');
-                        filters.custom_tag = customTagKeywords[keyword];
-                    }
-                });
-
-                // Category-based intent
-                const categoryKeywords = {
-                    'pizza': 'Pizza',
-                    'hot dog': 'Hot Dogs',
-                    'burger': 'Burgers',
-                    'nachos': 'Nachos',
-                    'ice cream': 'Ice Cream',
-                    'popcorn': 'Popcorn',
-                    'italian': 'Italian'
-                };
-
-                Object.keys(categoryKeywords).forEach(keyword => {
-                    if (lowerQuery.includes(keyword)) {
-                        intents.push('category_based');
-                        filters.category = categoryKeywords[keyword];
-                    }
-                });
-
-                // Availability filter - default to "available now"
-                const currentDate = new Date().toISOString().split('T')[0]; // Today's date in YYYY-MM-DD format
-                filters.available_now = currentDate;
-
-                return { intents, filters };
-            };
-
-            // Filter and rank results
-            const processQuery = (query, data) => {
-                const { intents, filters } = classifyIntent(query);
-                
-                let results = [...data];
-                let matchReasons = [];
-
-                // Item Name filter
-                if (filters.item_name) {
-                    results = results.filter(item => 
-                        item.name.toLowerCase().includes(filters.item_name.toLowerCase())
-                    );
-                    matchReasons.push(`Item name contains: ${filters.item_name}`);
-                }
-
-                // Section filter
-                if (filters.section) {
-                    results = results.filter(item => item.location.section === filters.section);
-                    matchReasons.push(`Location: Section ${filters.section}`);
-                }
-
-                // Zone filter
-                if (filters.zone) {
-                    results = results.filter(item => item.location.zone === filters.zone);
-                    matchReasons.push(`Zone: ${filters.zone}`);
-                }
-
-                // Stand Name filter
-                if (filters.stand_name) {
-                    results = results.filter(item => item.location.stand_name === filters.stand_name);
-                    matchReasons.push(`Stand: ${filters.stand_name}`);
-                }
-
-                // Dietary filter
-                if (filters.dietary) {
-                    results = results.filter(item => {
-                        if (filters.dietary === 'healthy') return item.dietary_info.is_healthy;
-                        return item.dietary_info.dietary_tags.includes(filters.dietary);
-                    });
-                    matchReasons.push(`Dietary: ${filters.dietary}`);
-                }
-
-                // Allergen-free filter
-                if (filters.allergen_free) {
-                    results = results.filter(item => {
-                        return filters.allergen_free.every(allergen => 
-                            !item.dietary_info.allergens.includes(allergen)
-                        );
-                    });
-                    matchReasons.push(`Allergen-free: ${filters.allergen_free.join(', ')}`);
-                }
-
-                // Price filter
-                if (filters.price) {
-                    results = results.filter(item => {
-                        if (filters.price.operator === '<=') {
-                            return item.pricing.average_price <= filters.price.value;
-                        } else if (filters.price.operator === '>=') {
-                            return item.pricing.average_price >= filters.price.value;
-                        }
-                        return true;
-                    });
-                    matchReasons.push(`Price ${filters.price.operator} ${filters.price.value}`);
-                }
-
-                // Speed filter
-                if (filters.speed) {
-                    results = results.filter(item => item.speed_metadata.estimated_wait === filters.speed);
-                    matchReasons.push(`Wait time: ${filters.speed}`);
-                }
-
-                // Popularity filter
-                if (filters.popularity) {
-                    if (typeof filters.popularity === 'object') {
-                        results = results.filter(item => {
-                            if (filters.popularity.operator === '>=') {
-                                return item.popularity.popularity_score >= filters.popularity.value;
-                            } else if (filters.popularity.operator === '<=') {
-                                return item.popularity.popularity_score <= filters.popularity.value;
-                            }
-                            return true;
+                    // Simple keyword matching
+                    if (lowerQuery.includes('vegetarian')) {
+                        results = results.filter(function(item) {
+                            return item.dietary_info.dietary_tags.includes('vegetarian');
                         });
-                        matchReasons.push(`Popularity ${filters.popularity.operator} ${filters.popularity.value}/10`);
-                    } else if (filters.popularity === 'signature') {
-                        results = results.filter(item => item.popularity.is_signature);
-                        matchReasons.push('Signature items only');
+                        matchReasons.push('Vegetarian options');
                     }
-                }
 
-                // Custom tag filter
-                if (filters.custom_tag) {
-                    results = results.filter(item => 
-                        item.custom_tags && item.custom_tags.includes(filters.custom_tag)
-                    );
-                    matchReasons.push(`Tag: ${filters.custom_tag}`);
-                }
+                    if (lowerQuery.includes('fast') || lowerQuery.includes('quick')) {
+                        results = results.filter(function(item) {
+                            return item.speed_metadata.estimated_wait === 'Short';
+                        });
+                        matchReasons.push('Fast service');
+                    }
 
-                // Category filter
-                if (filters.category) {
-                    results = results.filter(item => item.category === filters.category);
-                    matchReasons.push(`Category: ${filters.category}`);
-                }
+                    if (lowerQuery.includes('cheap') || lowerQuery.includes('under')) {
+                        results = results.filter(function(item) {
+                            return item.pricing.average_price <= 12;
+                        });
+                        matchReasons.push('Budget-friendly');
+                    }
 
-                // Availability filter (always applied - available now)
-                if (filters.available_now) {
-                    const currentDate = filters.available_now;
-                    results = results.filter(item => {
-                        return currentDate >= item.start_date && currentDate <= item.end_date;
+                    if (lowerQuery.includes('popular') || lowerQuery.includes('signature')) {
+                        results = results.filter(function(item) {
+                            return item.popularity.popularity_score >= 8;
+                        });
+                        matchReasons.push('Popular items');
+                    }
+
+                    if (lowerQuery.includes('pizza')) {
+                        results = results.filter(function(item) {
+                            return item.category === 'Pizza';
+                        });
+                        matchReasons.push('Pizza items');
+                    }
+
+                    if (lowerQuery.includes('hot dog')) {
+                        results = results.filter(function(item) {
+                            return item.category === 'Hot Dogs';
+                        });
+                        matchReasons.push('Hot Dog items');
+                    }
+
+                    // Section matching
+                    const sectionMatch = lowerQuery.match(/section\s*(\d+)/);
+                    if (sectionMatch) {
+                        const section = sectionMatch[1];
+                        results = results.filter(function(item) {
+                            return item.location.section === section;
+                        });
+                        matchReasons.push('Section ' + section);
+                    }
+
+                    // Sort by popularity
+                    results.sort(function(a, b) {
+                        return b.popularity.popularity_score - a.popularity.popularity_score;
                     });
-                    matchReasons.push('Available now');
-                }
 
-                // Default ranking by popularity if no specific popularity filter
-                if (!filters.popularity) {
-                    results.sort((a, b) => b.popularity.popularity_score - a.popularity.popularity_score);
+                    return {
+                        results: results.slice(0, 5),
+                        total_results: results.length,
+                        match_reasons: matchReasons
+                    };
+                } catch (error) {
+                    console.error('Error:', error);
+                    return {
+                        results: data.slice(0, 5),
+                        total_results: data.length,
+                        match_reasons: ['Showing all items']
+                    };
                 }
-
-                return {
-                    intents,
-                    filters,
-                    results: results.slice(0, 5),
-                    total_results: results.length,
-                    match_reasons: matchReasons
-                };
             };
 
-            const queryResults = useMemo(() => {
+            const queryResults = useMemo(function() {
                 if (!userQuery.trim()) return null;
                 return processQuery(userQuery, mockFoodData);
             }, [userQuery]);
@@ -462,23 +213,45 @@
                 "What's the fastest food option?", 
                 "Popular food at left field",
                 "Chicago style hot dogs",
-                "Signature items at Wrigley",
-                "Cheap food under $10",
-                "No wheat allergen options",
-                "Local specialty items",
-                "Food at Chicago Dogs stand",
-                "Highly rated items over $15"
+                "Cheap food under $10"
             ];
+
+            // SVG Icons
+            const SearchIcon = React.createElement('svg', { 
+                width: "20", height: "20", viewBox: "0 0 24 24", 
+                fill: "none", stroke: "currentColor", strokeWidth: "2" 
+            },
+                React.createElement('circle', { cx: "11", cy: "11", r: "8" }),
+                React.createElement('path', { d: "21 21l-4.35-4.35" })
+            );
+
+            const DatabaseIcon = React.createElement('svg', { 
+                width: "24", height: "24", viewBox: "0 0 24 24", 
+                fill: "none", stroke: "currentColor", strokeWidth: "2" 
+            },
+                React.createElement('ellipse', { cx: "12", cy: "5", rx: "9", ry: "3" }),
+                React.createElement('path', { d: "M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" }),
+                React.createElement('path', { d: "M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" })
+            );
+
+            const UtensilsIcon = React.createElement('svg', { 
+                width: "20", height: "20", viewBox: "0 0 24 24", 
+                fill: "none", stroke: "currentColor", strokeWidth: "2" 
+            },
+                React.createElement('path', { d: "M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" }),
+                React.createElement('path', { d: "M7 2v20" }),
+                React.createElement('path', { d: "M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3z" })
+            );
 
             return React.createElement('div', { className: "max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen" },
                 // Header
                 React.createElement('div', { className: "mb-8" },
                     React.createElement('h1', { className: "text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2" },
-                        React.createElement(Database),
+                        DatabaseIcon,
                         "F&B Query Filter Prototype"
                     ),
                     React.createElement('p', { className: "text-gray-600" },
-                        "Demonstrate how user queries translate to search filters and results (using real Cubs data)"
+                        "Demonstrate how user queries translate to search filters and results"
                     )
                 ),
 
@@ -489,12 +262,12 @@
                     ),
                     React.createElement('div', { className: "relative" },
                         React.createElement('div', { className: "absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" },
-                            React.createElement(Search)
+                            SearchIcon
                         ),
                         React.createElement('input', {
                             type: "text",
                             value: userQuery,
-                            onChange: (e) => setUserQuery(e.target.value),
+                            onChange: function(e) { setUserQuery(e.target.value); },
                             placeholder: "Try: 'What vegetarian food is near section 108?'",
                             className: "w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         })
@@ -502,48 +275,29 @@
                     React.createElement('div', { className: "mt-4" },
                         React.createElement('p', { className: "text-sm text-gray-600 mb-2" }, "Try these sample queries:"),
                         React.createElement('div', { className: "flex flex-wrap gap-2" },
-                            sampleQueries.map((query, index) =>
-                                React.createElement('button', {
+                            sampleQueries.map(function(query, index) {
+                                return React.createElement('button', {
                                     key: index,
-                                    onClick: () => setUserQuery(query),
+                                    onClick: function() { setUserQuery(query); },
                                     className: "px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hover:bg-blue-200 transition-colors"
-                                }, query)
-                            )
+                                }, query);
+                            })
                         )
                     )
                 ),
 
                 // Results section
                 queryResults && React.createElement('div', null,
-                    // Intent Analysis
+                    // Applied Filters
                     React.createElement('div', { className: "bg-white rounded-lg shadow-md p-6 mb-6" },
-                        React.createElement('h2', { className: "text-xl font-semibold mb-4 flex items-center gap-2" },
-                            React.createElement(Filter),
-                            "Intent Analysis & Filters"
-                        ),
-                        React.createElement('div', { className: "grid md:grid-cols-2 gap-6" },
-                            React.createElement('div', null,
-                                React.createElement('h3', { className: "font-medium text-gray-900 mb-2" }, "Detected Intents:"),
-                                React.createElement('div', { className: "space-y-1" },
-                                    queryResults.intents.map((intent, index) =>
-                                        React.createElement('span', {
-                                            key: index,
-                                            className: "inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm mr-2 mb-1"
-                                        }, intent.replace('_', ' '))
-                                    )
-                                )
-                            ),
-                            React.createElement('div', null,
-                                React.createElement('h3', { className: "font-medium text-gray-900 mb-2" }, "Applied Filters:"),
-                                React.createElement('div', { className: "space-y-1" },
-                                    Object.entries(queryResults.filters).map(([key, value]) =>
-                                        React.createElement('div', { key: key, className: "text-sm" },
-                                            React.createElement('span', { className: "font-medium text-gray-700" }, key + ":"),
-                                            React.createElement('span', { className: "ml-1 px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs" }, value)
-                                        )
-                                    )
-                                )
-                            )
+                        React.createElement('h2', { className: "text-xl font-semibold mb-4" }, "Applied Filters"),
+                        React.createElement('div', { className: "flex flex-wrap gap-2" },
+                            queryResults.match_reasons.map(function(reason, index) {
+                                return React.createElement('span', {
+                                    key: index,
+                                    className: "px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                                }, reason);
+                            })
                         )
                     ),
 
@@ -551,11 +305,8 @@
                     React.createElement('div', { className: "bg-white rounded-lg shadow-md p-6" },
                         React.createElement('div', { className: "flex items-center justify-between mb-4" },
                             React.createElement('h2', { className: "text-xl font-semibold flex items-center gap-2" },
-                                React.createElement(Utensils),
-                                `Query Results (${queryResults.total_results} found)`
-                            ),
-                            React.createElement('span', { className: "text-sm text-gray-600" },
-                                `Showing top ${queryResults.results.length} results`
+                                UtensilsIcon,
+                                "Query Results (" + queryResults.total_results + " found)"
                             )
                         ),
 
@@ -564,24 +315,17 @@
                                 React.createElement('table', { className: "min-w-full divide-y divide-gray-200" },
                                     React.createElement('thead', { className: "bg-gray-50" },
                                         React.createElement('tr', null,
-                                            React.createElement('th', { className: "px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Item Name"),
-                                            React.createElement('th', { className: "px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Description"),
-                                            React.createElement('th', { className: "px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Image URL"),
-                                            React.createElement('th', { className: "px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Website URL"),
-                                            React.createElement('th', { className: "px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Section"),
-                                            React.createElement('th', { className: "px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Stand Name"),
-                                            React.createElement('th', { className: "px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Allergens/Dietary"),
-                                            React.createElement('th', { className: "px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Price"),
-                                            React.createElement('th', { className: "px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Popularity"),
-                                            React.createElement('th', { className: "px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Wait Time"),
-                                            React.createElement('th', { className: "px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Custom Tags"),
-                                            React.createElement('th', { className: "px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "Start Date"),
-                                            React.createElement('th', { className: "px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" }, "End Date")
+                                            ['Item Name', 'Description', 'Image URL', 'Website URL', 'Section', 'Stand Name', 'Allergens/Dietary', 'Price', 'Popularity', 'Wait Time', 'Custom Tags', 'Start Date', 'End Date'].map(function(header) {
+                                                return React.createElement('th', { 
+                                                    key: header,
+                                                    className: "px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" 
+                                                }, header);
+                                            })
                                         )
                                     ),
                                     React.createElement('tbody', { className: "bg-white divide-y divide-gray-200" },
-                                        queryResults.results.map((item, index) =>
-                                            React.createElement('tr', { key: item.item_id, className: "hover:bg-gray-50" },
+                                        queryResults.results.map(function(item) {
+                                            return React.createElement('tr', { key: item.item_id, className: "hover:bg-gray-50" },
                                                 React.createElement('td', { className: "px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900" }, item.name),
                                                 React.createElement('td', { className: "px-3 py-4 text-sm text-gray-900 max-w-xs" },
                                                     React.createElement('div', { className: "truncate", title: item.description }, item.description)
@@ -600,41 +344,39 @@
                                                 React.createElement('td', { className: "px-3 py-4 whitespace-nowrap text-sm text-gray-900" }, item.location.stand_name),
                                                 React.createElement('td', { className: "px-3 py-4 text-sm text-gray-900" },
                                                     React.createElement('div', { className: "space-y-1" },
-                                                        item.dietary_info.allergens.length > 0 && React.createElement('div', { className: "text-red-600 text-xs" }, `Allergens: ${item.dietary_info.allergens.join(', ')}`),
+                                                        item.dietary_info.allergens.length > 0 && React.createElement('div', { className: "text-red-600 text-xs" }, "Allergens: " + item.dietary_info.allergens.join(', ')),
                                                         item.dietary_info.dietary_tags.length > 0 && React.createElement('div', { className: "text-green-600 text-xs" }, item.dietary_info.dietary_tags.join(', '))
                                                     )
                                                 ),
-                                                React.createElement('td', { className: "px-3 py-4 whitespace-nowrap text-sm text-gray-900" }, `$${item.pricing.average_price}`),
-                                                React.createElement('td', { className: "px-3 py-4 whitespace-nowrap text-sm text-gray-900" }, `${item.popularity.popularity_score}/10`),
+                                                React.createElement('td', { className: "px-3 py-4 whitespace-nowrap text-sm text-gray-900" }, "$" + item.pricing.average_price),
+                                                React.createElement('td', { className: "px-3 py-4 whitespace-nowrap text-sm text-gray-900" }, item.popularity.popularity_score + "/10"),
                                                 React.createElement('td', { className: "px-3 py-4 whitespace-nowrap text-sm text-gray-900" }, item.speed_metadata.estimated_wait),
                                                 React.createElement('td', { className: "px-3 py-4 text-sm text-gray-900" },
                                                     React.createElement('div', { className: "flex flex-wrap gap-1" },
-                                                        item.custom_tags.map((tag, tagIndex) =>
-                                                            React.createElement('span', {
+                                                        item.custom_tags && item.custom_tags.map(function(tag, tagIndex) {
+                                                            return React.createElement('span', {
                                                                 key: tagIndex,
                                                                 className: "px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs"
-                                                            }, tag)
-                                                        )
+                                                            }, tag);
+                                                        })
                                                     )
                                                 ),
                                                 React.createElement('td', { className: "px-3 py-4 whitespace-nowrap text-sm text-gray-900" }, item.start_date),
                                                 React.createElement('td', { className: "px-3 py-4 whitespace-nowrap text-sm text-gray-900" }, item.end_date)
-                                            )
-                                        )
+                                            );
+                                        })
                                     )
                                 )
                             ) :
                             React.createElement('div', { className: "text-center py-8 text-gray-500" },
-                                "No results found for your query. Try adjusting your search terms."
+                                "No results found. Try different search terms."
                             )
                     )
                 ),
 
                 // Default state
                 !queryResults && React.createElement('div', { className: "bg-white rounded-lg shadow-md p-8 text-center" },
-                    React.createElement('div', { className: "w-12 h-12 text-gray-400 mx-auto mb-4" },
-                        React.createElement(Search)
-                    ),
+                    React.createElement('div', { className: "w-12 h-12 text-gray-400 mx-auto mb-4" }, SearchIcon),
                     React.createElement('h3', { className: "text-lg font-medium text-gray-900 mb-2" }, "Ready to Search"),
                     React.createElement('p', { className: "text-gray-600" },
                         "Enter a query above to see how it gets processed into filters and results"
