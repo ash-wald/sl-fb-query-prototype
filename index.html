@@ -9,46 +9,41 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍕</text></svg>">
-    <style>
-        body {
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-    </style>
 </head>
 <body>
-    <div id="root"></div>
+    <div id="root">
+        <div style="padding: 20px; text-align: center;">
+            <p>Loading prototype...</p>
+        </div>
+    </div>
 
     <script type="text/babel">
         const { useState, useMemo } = React;
 
-        // Lucide React icons as simple SVG components
+        // Simple SVG icons
         const Search = () => (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="11" cy="11" r="8"></circle>
                 <path d="21 21l-4.35-4.35"></path>
             </svg>
         );
 
         const MapPin = () => (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                 <circle cx="12" cy="10" r="3"></circle>
             </svg>
         );
 
         const Clock = () => (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10"></circle>
                 <polyline points="12,6 12,12 16,14"></polyline>
             </svg>
         );
 
         const Utensils = () => (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path>
                 <path d="M7 2v20"></path>
                 <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3z"></path>
@@ -56,13 +51,13 @@
         );
 
         const Filter = () => (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46"></polygon>
             </svg>
         );
 
         const Database = () => (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
                 <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
                 <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
@@ -70,7 +65,7 @@
         );
 
         const ArrowRight = () => (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="5" y1="12" x2="19" y2="12"></line>
                 <polyline points="12,5 19,12 12,19"></polyline>
             </svg>
@@ -79,22 +74,21 @@
         const FoodQueryPrototype = () => {
             const [userQuery, setUserQuery] = useState('');
 
-            // Mock F&B data - replace with your real venue data
+            // Real Cubs concessions data
             const mockFoodData = [
                 {
-                    item_id: "001",
-                    name: "Classic Cheesesteak",
-                    description: "Authentic Philly cheesesteak with provolone",
+                    item_id: "cubs_1",
+                    name: "Chicago Style Hot Dog",
+                    description: "",
                     location: {
-                        section: "Section 136",
-                        stand_name: "Tony Luke's",
-                        zone: "Third Base Side",
-                        gate_proximity: ["Gate C", "Gate D"]
+                        section: "108",
+                        stand_name: "Chicago Dogs",
+                        zone: "Left Field"
                     },
-                    category: "Sandwiches",
+                    category: "Hot Dogs",
                     dietary_info: {
-                        allergens: ["gluten", "dairy"],
-                        dietary_tags: ["gluten_free_available"],
+                        allergens: ["Wheat"],
+                        dietary_tags: [],
                         is_healthy: false
                     },
                     speed_metadata: {
@@ -108,53 +102,22 @@
                     },
                     pricing: {
                         price_range: "$$",
-                        average_price: 14
+                        average_price: 12
                     }
                 },
                 {
-                    item_id: "002", 
-                    name: "Veggie Wrap",
-                    description: "Fresh vegetables with hummus in spinach tortilla",
+                    item_id: "cubs_2",
+                    name: "Home Run Inn Pizza",
+                    description: "",
                     location: {
-                        section: "Section 118",
-                        stand_name: "Fresh Garden Stand",
-                        zone: "Left Field",
-                        gate_proximity: ["Gate A", "Gate B"]
-                    },
-                    category: "Healthy",
-                    dietary_info: {
-                        allergens: [],
-                        dietary_tags: ["vegetarian", "vegan", "healthy"],
-                        is_healthy: true
-                    },
-                    speed_metadata: {
-                        estimated_wait: "Short",
-                        prep_time: "Fast"
-                    },
-                    popularity: {
-                        popularity_score: 7,
-                        is_signature: false,
-                        customer_favorite: false
-                    },
-                    pricing: {
-                        price_range: "$",
-                        average_price: 8
-                    }
-                },
-                {
-                    item_id: "003",
-                    name: "Margherita Pizza",
-                    description: "Fresh mozzarella, basil, and tomato sauce",
-                    location: {
-                        section: "Section 122",
-                        stand_name: "Slice Heaven",
-                        zone: "Third Base Side", 
-                        gate_proximity: ["Gate C"]
+                        section: "103",
+                        stand_name: "Pizza Stand",
+                        zone: "Left Field"
                     },
                     category: "Pizza",
                     dietary_info: {
-                        allergens: ["gluten", "dairy"],
-                        dietary_tags: ["vegetarian"],
+                        allergens: ["Milk", "Wheat"],
+                        dietary_tags: [],
                         is_healthy: false
                     },
                     speed_metadata: {
@@ -163,27 +126,142 @@
                     },
                     popularity: {
                         popularity_score: 8,
+                        is_signature: true,
+                        customer_favorite: true
+                    },
+                    pricing: {
+                        price_range: "$$",
+                        average_price: 14
+                    }
+                },
+                {
+                    item_id: "cubs_3",
+                    name: "Plant Based NotCo Burger",
+                    description: "",
+                    location: {
+                        section: "110",
+                        stand_name: "Third Base Classics",
+                        zone: "Third Base Side"
+                    },
+                    category: "Burgers",
+                    dietary_info: {
+                        allergens: ["Wheat"],
+                        dietary_tags: ["vegetarian", "healthy"],
+                        is_healthy: true
+                    },
+                    speed_metadata: {
+                        estimated_wait: "Long",
+                        prep_time: "Slow"
+                    },
+                    popularity: {
+                        popularity_score: 7,
+                        is_signature: false,
+                        customer_favorite: false
+                    },
+                    pricing: {
+                        price_range: "$$$",
+                        average_price: 18
+                    }
+                },
+                {
+                    item_id: "cubs_4",
+                    name: "Garrett Mix Popcorn",
+                    description: "",
+                    location: {
+                        section: "119",
+                        stand_name: "Chicago Dogs",
+                        zone: "Right Field"
+                    },
+                    category: "Popcorn",
+                    dietary_info: {
+                        allergens: ["Milk", "Soy"],
+                        dietary_tags: [],
+                        is_healthy: false
+                    },
+                    speed_metadata: {
+                        estimated_wait: "Short",
+                        prep_time: "Fast"
+                    },
+                    popularity: {
+                        popularity_score: 9,
+                        is_signature: true,
+                        customer_favorite: true
+                    },
+                    pricing: {
+                        price_range: "$",
+                        average_price: 8
+                    }
+                },
+                {
+                    item_id: "cubs_5",
+                    name: "Vienna Italian Beef Sandwich",
+                    description: "",
+                    location: {
+                        section: "110",
+                        stand_name: "Third Base Classics",
+                        zone: "Third Base Side"
+                    },
+                    category: "Italian",
+                    dietary_info: {
+                        allergens: ["Soy"],
+                        dietary_tags: [],
+                        is_healthy: false
+                    },
+                    speed_metadata: {
+                        estimated_wait: "Long",
+                        prep_time: "Slow"
+                    },
+                    popularity: {
+                        popularity_score: 8,
+                        is_signature: true,
+                        customer_favorite: true
+                    },
+                    pricing: {
+                        price_range: "$$$",
+                        average_price: 16
+                    }
+                },
+                {
+                    item_id: "cubs_6",
+                    name: "Nachos",
+                    description: "",
+                    location: {
+                        section: "105",
+                        stand_name: "Left Field Classics",
+                        zone: "Left Field"
+                    },
+                    category: "Nachos",
+                    dietary_info: {
+                        allergens: ["Milk"],
+                        dietary_tags: ["vegetarian"],
+                        is_healthy: false
+                    },
+                    speed_metadata: {
+                        estimated_wait: "Short",
+                        prep_time: "Fast"
+                    },
+                    popularity: {
+                        popularity_score: 7,
                         is_signature: false,
                         customer_favorite: true
                     },
                     pricing: {
                         price_range: "$$",
-                        average_price: 12
+                        average_price: 10
                     }
                 },
                 {
-                    item_id: "004",
-                    name: "Hot Dog",
-                    description: "All-beef hot dog with classic toppings",
+                    item_id: "cubs_7",
+                    name: "Soft Serve Ice Cream Helmet",
+                    description: "",
                     location: {
-                        section: "Section 108",
-                        stand_name: "Ballpark Dogs",
-                        zone: "Right Field",
-                        gate_proximity: ["Gate E"]
+                        section: "105",
+                        stand_name: "Left Field Classics",
+                        zone: "Left Field"
                     },
-                    category: "Classic",
+                    category: "Ice Cream",
                     dietary_info: {
-                        allergens: ["gluten"],
+                        allergens: ["Milk"],
                         dietary_tags: [],
                         is_healthy: false
                     },
@@ -197,38 +275,37 @@
                         customer_favorite: false
                     },
                     pricing: {
-                        price_range: "$",
-                        average_price: 6
+                        price_range: "$$",
+                        average_price: 12
                     }
                 },
                 {
-                    item_id: "005",
-                    name: "Loaded Nachos",
-                    description: "Tortilla chips with cheese, jalapeños, and sour cream",
+                    item_id: "cubs_8",
+                    name: "Pork Bao Bun",
+                    description: "",
                     location: {
-                        section: "Section 140",
-                        stand_name: "Nacho Libre",
-                        zone: "First Base Side",
-                        gate_proximity: ["Gate D", "Gate E"]
+                        section: "117",
+                        stand_name: "Marquee Classics",
+                        zone: "Main Concourse"
                     },
-                    category: "Snacks",
+                    category: "Signature Selections",
                     dietary_info: {
-                        allergens: ["dairy"],
-                        dietary_tags: ["vegetarian"],
+                        allergens: ["Wheat"],
+                        dietary_tags: [],
                         is_healthy: false
                     },
                     speed_metadata: {
-                        estimated_wait: "Short",
-                        prep_time: "Fast"
+                        estimated_wait: "Medium",
+                        prep_time: "Standard"
                     },
                     popularity: {
-                        popularity_score: 8,
-                        is_signature: false,
-                        customer_favorite: true
+                        popularity_score: 9,
+                        is_signature: true,
+                        customer_favorite: false
                     },
                     pricing: {
-                        price_range: "$$",
-                        average_price: 11
+                        price_range: "$$$",
+                        average_price: 15
                     }
                 }
             ];
@@ -242,7 +319,6 @@
                 // Location-based intent
                 const locationKeywords = ['near', 'section', 'gate', 'field', 'close', 'by'];
                 const sectionMatch = lowerQuery.match(/section\s*(\d+)/);
-                const gateMatch = lowerQuery.match(/gate\s*([a-z])/i);
                 const zoneKeywords = {
                     'left field': 'Left Field',
                     'right field': 'Right Field', 
@@ -250,13 +326,10 @@
                     'third base': 'Third Base Side'
                 };
 
-                if (locationKeywords.some(keyword => lowerQuery.includes(keyword)) || sectionMatch || gateMatch) {
+                if (locationKeywords.some(keyword => lowerQuery.includes(keyword)) || sectionMatch) {
                     intents.push('location_based');
                     if (sectionMatch) {
-                        filters.section = `Section ${sectionMatch[1]}`;
-                    }
-                    if (gateMatch) {
-                        filters.gate = `Gate ${gateMatch[1].toUpperCase()}`;
+                        filters.section = sectionMatch[1];
                     }
                     Object.keys(zoneKeywords).forEach(keyword => {
                         if (lowerQuery.includes(keyword)) {
@@ -269,7 +342,6 @@
                 const dietaryKeywords = {
                     'vegetarian': 'vegetarian',
                     'vegan': 'vegan', 
-                    'gluten free': 'gluten_free_available',
                     'healthy': 'healthy'
                 };
                 
@@ -297,10 +369,11 @@
                 // Category-based intent
                 const categoryKeywords = {
                     'pizza': 'Pizza',
-                    'sandwich': 'Sandwiches',
-                    'hot dog': 'Classic',
-                    'nachos': 'Snacks',
-                    'healthy': 'Healthy'
+                    'hot dog': 'Hot Dogs',
+                    'burger': 'Burgers',
+                    'nachos': 'Nachos',
+                    'ice cream': 'Ice Cream',
+                    'popcorn': 'Popcorn'
                 };
 
                 Object.keys(categoryKeywords).forEach(keyword => {
@@ -322,17 +395,8 @@
 
                 // Apply filters
                 if (filters.section) {
-                    // Check both primary section and all sections
-                    results = results.filter(item => 
-                        item.location.section === filters.section ||
-                        item.location.all_sections?.some(section => section === filters.section)
-                    );
-                    matchReasons.push(`Location: ${filters.section}`);
-                }
-
-                if (filters.gate) {
-                    results = results.filter(item => item.location.gate_proximity.includes(filters.gate));
-                    matchReasons.push(`Near ${filters.gate}`);
+                    results = results.filter(item => item.location.section === filters.section);
+                    matchReasons.push(`Location: Section ${filters.section}`);
                 }
 
                 if (filters.zone) {
@@ -345,7 +409,7 @@
                         if (filters.dietary === 'healthy') return item.dietary_info.is_healthy;
                         return item.dietary_info.dietary_tags.includes(filters.dietary);
                     });
-                    matchReasons.push(`Dietary: ${filters.dietary.replace('_', ' ')}`);
+                    matchReasons.push(`Dietary: ${filters.dietary}`);
                 }
 
                 if (filters.speed === 'fast') {
@@ -368,26 +432,16 @@
                 results = results.map(item => ({
                     ...item,
                     match_reasons: matchReasons,
-                    relevance_score: calculateRelevanceScore(item, filters)
+                    relevance_score: item.popularity.popularity_score + (item.popularity.is_signature ? 2 : 0)
                 }));
 
                 return {
                     intents,
                     filters,
-                    results: results.slice(0, 5), // Top 5 results
+                    results: results.slice(0, 5),
                     total_results: results.length,
                     match_reasons: matchReasons
                 };
-            };
-
-            const calculateRelevanceScore = (item, filters) => {
-                let score = item.popularity.popularity_score;
-                
-                if (filters.speed === 'fast' && item.speed_metadata.estimated_wait === 'Short') score += 2;
-                if (filters.popularity === 'high' && item.popularity.customer_favorite) score += 3;
-                if (item.popularity.is_signature) score += 1;
-                
-                return score;
             };
 
             const queryResults = useMemo(() => {
@@ -400,10 +454,7 @@
                 "What's the fastest food option?", 
                 "Popular food at left field",
                 "Chicago style hot dogs",
-                "Pizza near section 103",
-                "Healthy options close to me",
-                "Signature items at Wrigley",
-                "Rotational menu items"
+                "Signature items at Wrigley"
             ];
 
             return (
@@ -414,7 +465,7 @@
                             F&B Query Filter Prototype
                         </h1>
                         <p className="text-gray-600">
-                            Demonstrate how user queries translate to search filters and results
+                            Demonstrate how user queries translate to search filters and results (using real Cubs data)
                         </p>
                     </div>
 
@@ -540,13 +591,11 @@
                                                         )}
                                                     </div>
                                                     
-                                                    <p className="text-gray-600 mb-3">{item.description}</p>
-                                                    
-                                                    <div className="grid md:grid-cols-3 gap-4 text-sm">
+                                                    <div className="grid md:grid-cols-3 gap-4 text-sm mb-3">
                                                         <div className="flex items-center gap-1">
                                                             <MapPin />
                                                             <span className="font-medium">{item.location.stand_name}</span>
-                                                            <span className="text-gray-500">({item.location.section})</span>
+                                                            <span className="text-gray-500">(Section {item.location.section})</span>
                                                         </div>
                                                         
                                                         <div className="flex items-center gap-1">
@@ -561,13 +610,13 @@
                                                     </div>
 
                                                     {item.dietary_info.dietary_tags.length > 0 && (
-                                                        <div className="mt-2 flex flex-wrap gap-1">
+                                                        <div className="flex flex-wrap gap-1">
                                                             {item.dietary_info.dietary_tags.map((tag, tagIndex) => (
                                                                 <span
                                                                     key={tagIndex}
                                                                     className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs"
                                                                 >
-                                                                    {tag.replace('_', ' ')}
+                                                                    {tag}
                                                                 </span>
                                                             ))}
                                                         </div>
@@ -621,7 +670,13 @@
             );
         };
 
-        ReactDOM.render(<FoodQueryPrototype />, document.getElementById('root'));
+        // Mount the component
+        try {
+            ReactDOM.render(<FoodQueryPrototype />, document.getElementById('root'));
+        } catch (error) {
+            console.error('Error rendering component:', error);
+            document.getElementById('root').innerHTML = '<div style="padding: 20px; color: red;">Error loading prototype. Please refresh the page.</div>';
+        }
     </script>
 </body>
 </html>
